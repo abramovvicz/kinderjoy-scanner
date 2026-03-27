@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#2d5a27">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MC Jajeczko">
+<title>🥚 Minecraft Jajeczko</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+  }
+  header {
+    background: linear-gradient(90deg, #2d5a27, #4a7c59, #2d5a27);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 3px solid #5a8a50;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: #5a8a50; border: 3px solid #8bc34a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; border-radius: 4px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+  }
+  header h1 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  header p { font-size: 12px; color: #a8d5a2; }
+  main { max-width: 480px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  .search-wrap {
+    background: rgba(74,124,89,0.1);
+    border: 2px solid #4a7c59;
+    border-radius: 14px;
+    padding: 20px 16px;
+    margin-bottom: 20px;
+  }
+  .search-wrap label {
+    display: block; color: #a8d5a2;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+  .input-row { display: flex; gap: 10px; }
+  #code-input {
+    flex: 1;
+    background: #0d1117;
+    border: 2px solid #4a7c59;
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #fff;
+    font-size: 18px;
+    font-family: monospace;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #code-input:focus { border-color: #8bc34a; }
+  #code-input::placeholder { color: #333; font-size: 14px; letter-spacing: 1px; }
+  .btn-search {
+    background: linear-gradient(135deg, #2d5a27, #4a7c59);
+    color: #fff; border: 2px solid #8bc34a;
+    border-radius: 8px; padding: 12px 18px;
+    font-size: 22px; cursor: pointer;
+    box-shadow: 0 3px 0 #1a3a17;
+    transition: opacity 0.15s;
+  }
+  .btn-search:active { opacity: 0.7; transform: translateY(2px); }
+  .hint { color: #555; font-size: 12px; margin-top: 8px; }
+
+  #result { display: none; margin-bottom: 20px; }
+
+  .result-found {
+    background: linear-gradient(135deg, rgba(45,90,39,0.35), rgba(74,124,89,0.2));
+    border: 3px solid #8bc34a;
+    border-radius: 14px;
+    padding: 24px 16px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    animation: popIn 0.3s ease;
+  }
+  @keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+  .big-emoji { font-size: 80px; line-height: 1; margin-bottom: 10px; }
+  .figure-name {
+    color: #8bc34a; font-weight: 900; font-size: 24px;
+    letter-spacing: 1px; margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(139,195,74,0.5);
+  }
+  .searched-code {
+    display: inline-block;
+    background: #1a1a2e; border: 2px solid #4a7c59;
+    border-radius: 6px; padding: 4px 14px;
+    font-family: monospace; font-weight: 700; font-size: 16px;
+    color: #fff; margin-bottom: 14px;
+  }
+  .all-codes-label {
+    color: #666; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .codes-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .code-chip {
+    background: #1a1a2e; border: 2px solid #4a7c59;
+    border-radius: 6px; padding: 5px 12px;
+    font-family: monospace; font-weight: 700; font-size: 14px; color: #ccc;
+  }
+  .code-chip.active { border-color: #8bc34a; color: #8bc34a; }
+  .multi-note { color: #666; font-size: 12px; margin-top: 8px; }
+
+  .result-notfound {
+    background: rgba(255,100,0,0.1);
+    border: 2px solid #ff6400;
+    border-radius: 12px; padding: 24px;
+    text-align: center;
+    animation: popIn 0.3s ease;
+  }
+  .result-notfound .big-emoji { font-size: 60px; }
+  .result-notfound h3 { color: #ff9a4a; font-size: 18px; margin-bottom: 8px; }
+  .result-notfound p { color: #777; font-size: 14px; }
+
+  .list-header {
+    color: #666; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .list-header span { color: #4a7c59; }
+  #filter-input {
+    width: 100%; background: #0d1117;
+    border: 1px solid #2a2a3e; border-radius: 8px;
+    padding: 10px 14px; color: #ccc; font-size: 14px;
+    outline: none; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  #filter-input:focus { border-color: #4a7c59; }
+  #filter-input::placeholder { color: #333; }
+
+  .figure-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(74,124,89,0.25);
+    border-radius: 8px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .figure-item:active { background: rgba(74,124,89,0.2); }
+  .fig-emoji { font-size: 24px; flex-shrink: 0; }
+  .fname { color: #ccc; font-size: 13px; font-weight: 600; }
+  .fcodes { color: #4a7c59; font-size: 11px; font-family: monospace; margin-top: 2px; }
+  .arrow { color: #333; margin-left: auto; font-size: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🥚</div>
+  <div>
+    <h1>MC JAJECZKO</h1>
+    <p>Wpisz kod → dowiedz się co w środku</p>
+  </div>
+</header>
+
+<main>
+  <div class="search-wrap">
+    <label>Wpisz kod z jajeczka</label>
+    <div class="input-row">
+      <input type="text" id="code-input" placeholder="np. 7G1 S1R" maxlength="20"
+        oninput="this.value = this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter') search()">
+      <button class="btn-search" onclick="search()">🔍</button>
+    </div>
+    <div class="hint">Kod znajdziesz na spodzie lub boku jajeczka</div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="list-header">Wszystkie figurki <span id="count"></span></div>
+  <input type="text" id="filter-input" placeholder="🔎 Szukaj po nazwie lub kodzie..." oninput="filterList()">
+  <div id="figure-list"></div>
+</main>
+
+<script>
+const FIGURES = [
+  { name: "ALEX ZWYKŁA",                         codes: ["40G1 S1R"],                          emoji: "🧑" },
+  { name: "BAT",                                  codes: ["46G1 A2A"],                          emoji: "🦇" },
+  { name: "CHARGED CREEPER",                      codes: ["2G1 S1R"],                           emoji: "⚡" },
+  { name: "CREEPER",                              codes: ["7G1 S1R", "42G1 S1R"],               emoji: "💚" },
+  { name: "DIAMOND STEVE",                        codes: ["37G1 S1A"],                          emoji: "💎" },
+  { name: "DIAMOND STEVE Z ZAWIESZKĄ PLASTIKOWĄ", codes: ["1G1 G1A", "17G1 G1A", "32G1 G1A"],  emoji: "💎" },
+  { name: "DIRT BLOCK",                           codes: ["9G1 A2A", "17G1 A2A"],               emoji: "🟫" },
+  { name: "ENDER DRAGON",                         codes: ["24G1 S1R"],                          emoji: "🐉" },
+  { name: "ENDERMAN",                             codes: ["24G1 G1A"],                          emoji: "🖤" },
+  { name: "GLOWSQUID",                            codes: ["4G1 S1A", "45G1 A2A"],               emoji: "🦑" },
+  { name: "GOLD ALEX Z ZAWIESZKĄ PLASTIKOWĄ",     codes: ["29G1 G1A"],                          emoji: "🥇" },
+  { name: "GOLD BLOCK",                           codes: ["15G1 A2A", "26G1 A2A", "47G1 A2A"], emoji: "🟡" },
+  { name: "KOT",                                  codes: ["28G1 G1A", "34G1 G1A"],              emoji: "🐱" },
+  { name: "LISEK",                                codes: ["31G1 G1A"],                          emoji: "🦊" },
+  { name: "LÓD",                                  codes: ["11G1 G1A", "22G1 S1A"],              emoji: "🧊" },
+  { name: "MAGMA CUBE",                           codes: ["13G1 S1A", "20G1 S1R"],              emoji: "🔴" },
+  { name: "OCELOT",                               codes: ["30G1 G1A"],                          emoji: "🐆" },
+  { name: "REDSTONE BLOCK",                       codes: ["5G1 A2A"],                           emoji: "🔴" },
+  { name: "SHULKER",                              codes: ["7G1 G1A", "31G1 A2A"],               emoji: "🟣" },
+  { name: "SPIDER",                               codes: ["48G1 A2A"],                          emoji: "🕷️" },
+  { name: "SZKIELET",                             codes: ["11G1 S1R"],                          emoji: "💀" },
+  { name: "SZKIELET Z PORTALEM",                  codes: ["6G1 G1A"],                           emoji: "💀" },
+  { name: "WODA/LÓD",                             codes: ["3G1 A2A"],                           emoji: "💧" },
+  { name: "ZOMBIE",                               codes: ["5G1 S1R", "21G1 S1R", "44G1 S1R"],  emoji: "🧟" },
+  { name: "ZWYKŁY STEVE",                         codes: ["43G1 S1R"],                          emoji: "🧑" },
+];
+
+function normalize(s) { return s.trim().toUpperCase().replace(/\s+/g, ' '); }
+
+function search(prefill) {
+  const raw = prefill !== undefined ? prefill : document.getElementById('code-input').value;
+  const query = normalize(raw);
+  if (!query) return;
+  document.getElementById('code-input').value = query;
+
+  const found = FIGURES.find(f => f.codes.some(c => normalize(c) === query));
+  const resultEl = document.getElementById('result');
+
+  if (found) {
+    const codesHtml = found.codes.map(c =>
+      `<span class="code-chip ${normalize(c) === query ? 'active' : ''}">${c}</span>`
+    ).join('');
+    const multiNote = found.codes.length > 1
+      ? `<div class="multi-note">Ta figurka ma ${found.codes.length} różne kody</div>` : '';
+    resultEl.innerHTML = `
+      <div class="result-found">
+        <div class="big-emoji">${found.emoji}</div>
+        <div class="figure-name">${found.name}</div>
+        <div class="searched-code">${query}</div>
+        <div class="all-codes-label">Wszystkie kody tej figurki</div>
+        <div class="codes-row">${codesHtml}</div>
+        ${multiNote}
+      </div>`;
+  } else {
+    resultEl.innerHTML = `
+      <div class="result-notfound">
+        <div class="big-emoji">🤔</div>
+        <h3>Nie znaleziono figurki</h3>
+        <p>Kod <strong style="color:#fff">${query}</strong> nie ma w bazie.<br>Sprawdź czy dobrze przepisałeś.</p>
+      </div>`;
+  }
+  resultEl.style.display = 'block';
+  resultEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function fillAndSearch(code) {
+  document.getElementById('code-input').value = code;
+  search(code);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function buildList(filter) {
+  const f = (filter || '').toUpperCase();
+  const filtered = f
+    ? FIGURES.filter(fig => fig.name.includes(f) || fig.codes.some(c => c.includes(f)))
+    : FIGURES;
+  document.getElementById('count').textContent = `(${filtered.length})`;
+  const listEl = document.getElementById('figure-list');
+  if (!filtered.length) {
+    listEl.innerHTML = `<div style="color:#555;text-align:center;padding:20px">Brak wyników</div>`;
+    return;
+  }
+  listEl.innerHTML = filtered.map(fig => `
+    <div class="figure-item" onclick="fillAndSearch('${fig.codes[0]}')">
+      <span class="fig-emoji">${fig.emoji}</span>
+      <div>
+        <div class="fname">${fig.name}</div>
+        <div class="fcodes">${fig.codes.join(' · ')}</div>
+      </div>
+      <span class="arrow">›</span>
+    </div>`).join('');
+}
+
+function filterList() { buildList(document.getElementById('filter-input').value); }
+
+buildList();
+</script>
+</body>
+</html>
