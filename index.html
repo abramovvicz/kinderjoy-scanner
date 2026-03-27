@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#2d5a27">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MC Scanner">
+<title>Minecraft Scanner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+  }
+  header {
+    background: linear-gradient(90deg, #2d5a27, #4a7c59, #2d5a27);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 3px solid #5a8a50;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .logo {
+    width: 44px; height: 44px;
+    background: #5a8a50;
+    border: 3px solid #8bc34a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; border-radius: 4px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,0.3);
+  }
+  header h1 { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+  header p { font-size: 12px; color: #a8d5a2; }
+  main { max-width: 480px; margin: 0 auto; padding: 20px 16px 40px; }
+
+  .upload-area {
+    border: 2px dashed #4a7c59;
+    border-radius: 12px;
+    background: rgba(74,124,89,0.1);
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .upload-area .icon { font-size: 56px; margin-bottom: 12px; }
+  .upload-area h2 { color: #8bc34a; font-size: 18px; margin-bottom: 8px; }
+  .upload-area p { color: #666; font-size: 14px; margin-bottom: 20px; }
+  .btn-row { display: flex; gap: 10px; justify-content: center; }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: 2px solid #5a8a50;
+    transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-primary { background: #2d5a27; color: #fff; border-color: #8bc34a; }
+  .btn-secondary { background: #1a3a2a; color: #8bc34a; border-color: #4a7c59; }
+  .btn-full {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #2d5a27, #4a7c59);
+    color: #fff;
+    border: 3px solid #8bc34a;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #1a3a17;
+    margin-top: 12px;
+  }
+  .btn-outline {
+    flex: 1; padding: 12px;
+    background: transparent; color: #8bc34a;
+    border: 2px solid #4a7c59; border-radius: 8px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  .btn-green {
+    flex: 1; padding: 12px;
+    background: #2d5a27; color: #fff;
+    border: 2px solid #8bc34a; border-radius: 8px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+
+  #preview-box { display: none; }
+  #preview-img {
+    width: 100%; display: block;
+    max-height: 320px; object-fit: cover;
+    border-radius: 10px;
+    border: 3px solid #4a7c59;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    margin-bottom: 12px;
+  }
+
+  #loading {
+    display: none;
+    background: rgba(74,124,89,0.15);
+    border: 2px solid #4a7c59;
+    border-radius: 12px;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .spin { display: inline-block; font-size: 40px; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading h3 { color: #8bc34a; font-size: 16px; margin-top: 10px; }
+  #loading p { color: #666; font-size: 13px; margin-top: 4px; }
+
+  #result { display: none; margin-top: 12px; }
+  .result-card {
+    background: linear-gradient(135deg, rgba(45,90,39,0.3), rgba(74,124,89,0.2));
+    border: 3px solid #8bc34a;
+    border-radius: 14px;
+    padding: 20px 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  }
+  .result-center { text-align: center; margin-bottom: 16px; }
+  .result-emoji { font-size: 64px; line-height: 1; }
+  .result-name {
+    color: #8bc34a; font-weight: 900; font-size: 22px;
+    margin-top: 8px; letter-spacing: 1px;
+    text-shadow: 0 0 20px rgba(139,195,74,0.5);
+  }
+  .badge {
+    display: inline-block;
+    border-radius: 20px; padding: 2px 12px;
+    font-size: 12px; font-weight: 600; margin-top: 6px;
+  }
+  .badge-high { background: rgba(139,195,74,0.2); border: 1px solid #8bc34a; color: #8bc34a; }
+  .badge-low { background: rgba(255,193,7,0.2); border: 1px solid #ffc107; color: #ffc107; }
+  .codes-label {
+    color: #666; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .codes-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .code-chip {
+    background: #1a1a2e; border: 2px solid #4a7c59;
+    border-radius: 6px; padding: 6px 14px;
+    color: #fff; font-family: monospace;
+    font-weight: 700; font-size: 15px;
+  }
+  .reason-box {
+    background: rgba(0,0,0,0.3); border-radius: 8px;
+    padding: 10px 14px; color: #a8d5a2;
+    font-size: 14px; line-height: 1.5; margin-bottom: 16px;
+  }
+  .action-row { display: flex; gap: 10px; }
+
+  .fail-card {
+    background: rgba(255,100,0,0.1);
+    border: 2px solid #ff6400;
+    border-radius: 12px; padding: 20px;
+    text-align: center;
+  }
+  .fail-card .icon { font-size: 48px; margin-bottom: 8px; }
+  .fail-card h3 { color: #ff9a4a; font-size: 16px; margin-bottom: 8px; }
+  .fail-card p { color: #888; font-size: 14px; margin-bottom: 16px; }
+
+  #error-box {
+    display: none;
+    background: rgba(200,50,50,0.15);
+    border: 2px solid #c83232;
+    border-radius: 10px; padding: 16px;
+    color: #ff6b6b; text-align: center;
+    margin-top: 12px;
+  }
+
+  .list-section { margin-top: 24px; }
+  .list-label {
+    color: #666; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .figure-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(74,124,89,0.3);
+    border-radius: 8px; padding: 8px 12px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .figure-item span { font-size: 20px; }
+  .figure-item .fname { color: #ccc; font-size: 13px; font-weight: 600; }
+  .figure-item .fcodes { color: #4a7c59; font-size: 11px; font-family: monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⛏️</div>
+  <div>
+    <h1>MINECRAFT SCANNER</h1>
+    <p>Identyfikator figurek</p>
+  </div>
+</header>
+
+<main>
+  <!-- Upload -->
+  <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+    <div class="icon">📦</div>
+    <h2>Wrzuć zdjęcie figurki</h2>
+    <p>Kliknij aby wybrać lub zrób zdjęcie</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="event.stopPropagation(); document.getElementById('file-input').click()">📁 Galeria</button>
+      <button class="btn btn-secondary" onclick="event.stopPropagation(); document.getElementById('camera-input').click()">📷 Aparat</button>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display:none" onchange="handleFile(this)">
+
+  <!-- Preview -->
+  <div id="preview-box">
+    <img id="preview-img" src="" alt="figurka">
+    <button class="btn-full" id="analyze-btn" onclick="analyze()">🔍 ZIDENTYFIKUJ FIGURKĘ</button>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spin">⛏️</div>
+    <h3>AI analizuje figurkę...</h3>
+    <p>To może chwilę potrwać</p>
+  </div>
+
+  <!-- Error -->
+  <div id="error-box">⚠️ <span id="error-msg"></span></div>
+
+  <!-- Result -->
+  <div id="result"></div>
+
+  <!-- Figure list -->
+  <div class="list-section" id="figure-list"></div>
+</main>
+
+<script>
+const FIGURES = [
+  { name: "ALEX ZWYKŁA", codes: ["40G1 S1R"], emoji: "🧑" },
+  { name: "BAT", codes: ["46G1 A2A"], emoji: "🦇" },
+  { name: "CHARGED CREEPER", codes: ["2G1 S1R"], emoji: "⚡" },
+  { name: "CREEPER", codes: ["7G1 S1R", "42G1 S1R"], emoji: "💚" },
+  { name: "DIAMOND STEVE", codes: ["37G1 S1A"], emoji: "💎" },
+  { name: "DIAMOND STEVE Z ZAWIESZKĄ PLASTIKOWĄ", codes: ["1G1 G1A", "17G1 G1A", "32G1 G1A"], emoji: "💎" },
+  { name: "DIRT BLOCK", codes: ["9G1 A2A", "17G1 A2A"], emoji: "🟫" },
+  { name: "ENDER DRAGON", codes: ["24G1 S1R"], emoji: "🐉" },
+  { name: "ENDERMAN", codes: ["24G1 G1A"], emoji: "🖤" },
+  { name: "GLOWSQUID", codes: ["4G1 S1A", "45G1 A2A"], emoji: "🦑" },
+  { name: "GOLD ALEX Z ZAWIESZKĄ PLASTIKOWĄ", codes: ["29G1 G1A"], emoji: "🥇" },
+  { name: "GOLD BLOCK", codes: ["15G1 A2A", "26G1 A2A", "47G1 A2A"], emoji: "🟡" },
+  { name: "KOT", codes: ["28G1 G1A", "34G1 G1A"], emoji: "🐱" },
+  { name: "LISEK", codes: ["31G1 G1A"], emoji: "🦊" },
+  { name: "LÓD", codes: ["11G1 G1A", "22G1 S1A"], emoji: "🧊" },
+  { name: "MAGMA CUBE", codes: ["13G1 S1A", "20G1 S1R"], emoji: "🔴" },
+  { name: "OCELOT", codes: ["30G1 G1A"], emoji: "🐆" },
+  { name: "REDSTONE BLOCK", codes: ["5G1 A2A"], emoji: "🔴" },
+  { name: "SHULKER", codes: ["7G1 G1A", "31G1 A2A"], emoji: "🟣" },
+  { name: "SPIDER", codes: ["48G1 A2A"], emoji: "🕷️" },
+  { name: "SZKIELET", codes: ["11G1 S1R"], emoji: "💀" },
+  { name: "SZKIELET Z PORTALEM", codes: ["6G1 G1A"], emoji: "💀" },
+  { name: "WODA/LÓD", codes: ["3G1 A2A"], emoji: "💧" },
+  { name: "ZOMBIE", codes: ["5G1 S1R", "21G1 S1R", "44G1 S1R"], emoji: "🧟" },
+  { name: "ZWYKŁY STEVE", codes: ["43G1 S1R"], emoji: "🧑" },
+];
+
+let currentBase64 = null;
+
+// Build figure list
+const listEl = document.getElementById('figure-list');
+listEl.innerHTML = `<div class="list-label">Baza figurek (${FIGURES.length})</div>` +
+  FIGURES.map(f => `
+    <div class="figure-item">
+      <span>${f.emoji}</span>
+      <div>
+        <div class="fname">${f.name}</div>
+        <div class="fcodes">${f.codes.join(' | ')}</div>
+      </div>
+    </div>`).join('');
+
+function handleFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    currentBase64 = e.target.result.split(',')[1];
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('upload-area').style.display = 'none';
+    document.getElementById('figure-list').style.display = 'none';
+    document.getElementById('preview-box').style.display = 'block';
+    document.getElementById('result').style.display = 'none';
+    document.getElementById('error-box').style.display = 'none';
+    document.getElementById('analyze-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyze() {
+  if (!currentBase64) return;
+  document.getElementById('analyze-btn').style.display = 'none';
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+
+  const figureList = FIGURES.map(f => `- ${f.name} (kody: ${f.codes.join(', ')})`).join('\n');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: currentBase64 } },
+            { type: 'text', text: `Jesteś ekspertem od figurek Minecraft. Oto lista wszystkich figurek z kodami:\n${figureList}\n\nPrzeanalizuj zdjęcie i zidentyfikuj figurkę. Odpowiedz TYLKO w formacie JSON (bez markdown):\n{"name": "NAZWA", "codes": ["KOD1"], "confidence": "wysoka", "reason": "Uzasadnienie"}\n\nJeśli nie rozpoznajesz: {"name": null, "codes": [], "confidence": "niska", "reason": "Powód"}` }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = (data.content || []).find(b => b.type === 'text')?.text || '{}';
+    let res;
+    try { res = JSON.parse(text.replace(/```json|```/g, '').trim()); }
+    catch { res = { name: null, codes: [], confidence: 'niska', reason: 'Błąd parsowania' }; }
+
+    showResult(res);
+  } catch (err) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-box').style.display = 'block';
+    document.getElementById('error-msg').textContent = 'Błąd połączenia. Sprawdź internet i spróbuj ponownie.';
+    document.getElementById('analyze-btn').style.display = 'block';
+  }
+}
+
+function showResult(res) {
+  document.getElementById('loading').style.display = 'none';
+  const resultEl = document.getElementById('result');
+  resultEl.style.display = 'block';
+
+  if (res.name) {
+    const fig = FIGURES.find(f => f.name === res.name);
+    const codes = fig ? fig.codes : res.codes || [];
+    const emoji = fig ? fig.emoji : '🎮';
+    const badgeClass = res.confidence === 'wysoka' ? 'badge-high' : 'badge-low';
+    resultEl.innerHTML = `
+      <div class="result-card">
+        <div class="result-center">
+          <div class="result-emoji">${emoji}</div>
+          <div class="result-name">${res.name}</div>
+          <span class="badge ${badgeClass}">Pewność: ${res.confidence}</span>
+        </div>
+        <div class="codes-label">KODY FIGURKI</div>
+        <div class="codes-row">${codes.map(c => `<span class="code-chip">${c}</span>`).join('')}</div>
+        <div class="reason-box">💬 ${res.reason}</div>
+        <div class="action-row">
+          <button class="btn-outline" onclick="reset()">📷 Nowe zdjęcie</button>
+          <button class="btn-green" onclick="analyze()">🔄 Sprawdź ponownie</button>
+        </div>
+      </div>`;
+  } else {
+    resultEl.innerHTML = `
+      <div class="fail-card">
+        <div class="icon">🤔</div>
+        <h3>Nie rozpoznano figurki</h3>
+        <p>${res.reason}</p>
+        <button class="btn btn-primary" onclick="reset()">Spróbuj inne zdjęcie</button>
+      </div>`;
+  }
+}
+
+function reset() {
+  currentBase64 = null;
+  document.getElementById('upload-area').style.display = 'block';
+  document.getElementById('figure-list').style.display = 'block';
+  document.getElementById('preview-box').style.display = 'none';
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('camera-input').value = '';
+}
+</script>
+</body>
+</html>
